@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Calendar 1950-2100</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 5px;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .navigation-buttons {
+            margin-bottom: 10px; 
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            gap: 20px;
+            
+        }
+
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            border: none;
+            border-radius: 25px;
+            background-color:rgb(156, 48, 48);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+          background-color:rgb(192, 117, 117);
+            transform: translateY(-2px);
+        }
+
+        #calendar-container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .calendar-year {
+            text-align: center;
+        }
+
+        .calendar-year h2 {
+            font-size: 2rem;
+            color: #34495e;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .calendar-year h2::after {
+            content: '';
+            width: 60px;
+            height: 4px;
+            background-color:brown;
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .calendar-months {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .calendar-month {
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .calendar-month:hover {
+            transform: translateY(-5px);
+        }
+
+        .calendar-month h3 {
+            font-size: 1.2rem;
+            color: rgb(156, 48, 48);
+            text-align: center;
+            margin-bottom: 10px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .day-header, .day {
+            text-align: center;
+            padding: 5px 0;
+            font-size: 0.9rem;
+            border-radius: 4px;
+        }
+
+        .day-header {
+            font-weight: bold;
+            background-color:  rgb(153, 91, 91);
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .day {
+            background-color: #ffffff;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+            cursor: default;
+            border: 1px solid #dcdde1;
+        }
+
+        .day:hover {
+            background-color: #dfe6e9;
+        }
+
+        .sunday {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .holiday {
+            color: #e74c3c;
+            font-weight: bold;
+            background-color: rgb(183, 149, 149);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .tooltip {
+            visibility: hidden;
+    width: 300px; /* Increased width */
+    background-color: rgba(24, 24, 24, 0.7);
+    color: rgb(255, 255, 255);
+    text-align: center;
+    border-radius: 6px;
+    padding: 25px; /* Increased padding */
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Position above the day */
+    left: 50%;
+    margin-left: -100px; /* Adjusted for centering */
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 30px; /* Increased font size */
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%; /* Position the arrow below the tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2c3e50 transparent transparent transparent;
+        }
+
+        .holiday:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .month-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f8f9fa;
+            display: none;
+            flex-direction: column;
+            padding: 40px;
+            z-index: 999;
+            overflow: auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .month-view h3 {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #252525;
+        }
+
+        .month-view .close-btn {
+            align-self: flex-end;
+            font-size: 1rem;
+            background-color: rgb(156, 48, 48);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 25px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .month-view .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            width: 80%;
+            max-width: 1000px;
+        }
+
+        .month-view .day-header {
+            font-size: 1.2rem;
+            background-color:rgb(156, 48, 48);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .month-view .day {
+            font-size: 1rem;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #dcdde1;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .month-view .day:hover {
+            background-color: #dfe6e9;
+            transform: translateY(-3px);
+        }
+
+        .month-view .sunday {
+            color: #e74c3c;
+        }
+
+        .month-view .holiday {
+            background-color: rgb(183, 149, 149);
+            border: none;
+            color: #e74c3c;
+            position: relative;
+        }
+
+
+        .today {
+    background-color: rgb(234, 160, 160); /* Current background color */
+    color: black; /* Change the text color to red */
+    font-weight: bold; /* Optional: to make it stand out more */
+}
+
+        @media (max-width: 768px) {
+            .calendar-months {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .calendar-year h2 {
+                font-size: 1.8rem;
+            }
+
+            .calendar-month h3 {
+                font-size: 1rem;
+            }
+
+            .day-header, .day {
+                font-size: 0.8rem;
+            }
+
+            .month-view h3 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-months {
+                grid-template-columns: 1fr;
+            }
+
+            .month-view .days {
+                width: 100%;
+            }
+        }
+    
+    </style>
+</head>
+<body>
+    <h1>Calendar</h1>
+    <div class="navigation-buttons">
+        <button id="prev-year">Previous Year</button>
+        <button id="next-year">Next Year</button>
+    </div>
+
+    <div id="calendar-container">
+        <div class="calendar-year">
+            <h2 id="year">2023</h2>
+        </div>
+        <div class="calendar-months" id="calendar-months">
+            <!-- Calendar months will be generated here -->
+        </div>
+    </div>
+
+    <!-- Month View (Pop-up) -->
+    <div id="month-view" class="month-view">
+        <button class="close-btn" id="close-month-view">Back to view year</button>
+        <h3 id="month-name"></h3>
+        <div class="month-nav">
+            <button id="prev-month">Previous Month</button>
+            <button id="next-month">Next Month</button>
+        </div>
+        <div class="days" id="month-days">
+            <!-- Days of the month will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const holidays = {
+                '2024-01-01': "New Year's Day",
+                '2024-01-15': "Makar Sankranti",
+                '2024-01-26': "Republic Day",
+                '2024-02-19': "Shivjayanti",
+                '2024-03-08': "Mahashivratri",
+                '2024-03-25': "Dhulivandan",
+                '2024-03-29': "Good Friday",
+                '2024-04-09': "Gudipadva",
+                '2024-04-11': "Ramzan Id",
+                '2024-04-17': "Ramnavami",
+                '2024-05-01': "Maharashtra Din",
+                '2024-05-02': "Start of Summer Vacation",
+                '2024-06-08': "End of Summer Vacation",
+                '2024-06-17': "Bakari Id",
+                '2024-07-17': "Moharam",
+                '2024-08-15': "Independence Day",
+                '2024-09-07': "Ganesh Chaturthi",
+                '2024-09-11': "Gauri Poojan",
+                '2024-09-16': "Id-E-Milad",
+                '2024-09-17': "Anant Chaturthi",
+                '2024-10-02': "Gandhi Jayanti",
+                '2024-10-12': "Dussehra",
+                '2024-11-12': "Diwali",
+                '2024-12-25': "Christmas"
+        };
+
+        const calendarContainer = document.getElementById('calendar-container');
+        const yearElement = document.getElementById('year');
+        const calendarMonthsContainer = document.getElementById('calendar-months');
+
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+
+        document.getElementById('prev-year').onclick = () => {
+            if (currentYear > 1950) {
+                currentYear--;
+                generateYearCalendar(currentYear);
+            }
+        };
+
+        document.getElementById('next-year').onclick = () => {
+            if (currentYear < 2100) {
+                currentYear++;
+                generateYearCalendar(currentYear);
+            }
+        };
+
+        // Generate the calendar for the entire year
+        function generateYearCalendar(year) {
+            yearElement.textContent = year;
+            calendarMonthsContainer.innerHTML = '';
+
+            for (let month = 0; month < 12; month++) {
+                const monthDiv = document.createElement('div');
+                monthDiv.classList.add('calendar-month');
+
+                const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+                monthDiv.innerHTML = `<h3>${monthName}</h3><div class="days"></div>`;
+
+                const daysGrid = monthDiv.querySelector('.days');
+
+                dayNames.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.classList.add('day-header');
+                    dayHeader.textContent = day;
+                    daysGrid.appendChild(dayHeader);
+                });
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.classList.add('day');
+                    emptyDiv.style.visibility = 'hidden';
+                    daysGrid.appendChild(emptyDiv);
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.classList.add('day');
+                    dayDiv.textContent = day;
+
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    if (holidays[dateString]) {
+                        dayDiv.classList.add('holiday');
+                    }
+
+                    if (new Date(year, month, day).getDay() === 0) {
+                        dayDiv.classList.add('sunday');
+                    }
+
+                    const today = new Date();
+                    if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                        dayDiv.classList.add('today');
+                    }
+
+                    daysGrid.appendChild(dayDiv);
+                }
+
+                monthDiv.onclick = () => {
+                    showMonthView(year, month);
+                };
+
+                calendarMonthsContainer.appendChild(monthDiv);
+            }
+        }
+
+        function showMonthView(year, month) {
+            const monthView = document.getElementById('month-view');
+            const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+            document.getElementById('month-name').textContent = `${monthName} ${year}`;
+
+            const daysGrid = document.getElementById('month-days');
+            daysGrid.innerHTML = '';
+
+            dayNames.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.classList.add('day-header');
+                dayHeader.textContent = day;
+                daysGrid.appendChild(dayHeader);
+            });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.classList.add('day');
+                emptyDiv.style.visibility = 'hidden';
+                daysGrid.appendChild(emptyDiv);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.classList.add('day');
+                dayDiv.textContent = day;
+
+                const date = new Date(year, month, day);
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                if (holidays[dateString]) {
+                    dayDiv.classList.add('holiday');
+                    const tooltip = document.createElement('span');
+                    tooltip.classList.add('tooltip');
+                    tooltip.textContent = holidays[dateString];
+                    dayDiv.appendChild(tooltip);
+                }
+
+                if (date.getDay() === 0) {
+                    dayDiv.classList.add('sunday');
+                }
+
+                if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === day) {
+                    dayDiv.classList.add('today');
+                    dayDiv.style.backgroundColor = '#ff9f43';
+                }
+
+                daysGrid.appendChild(dayDiv);
+            }
+
+            monthView.style.display = 'flex';
+        }
+
+        document.getElementById('close-month-view').onclick = () => {
+            document.getElementById('month-view').style.display = 'none';
+        };
+
+        document.getElementById('prev-month').onclick = () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            showMonthView(currentYear, currentMonth);
+        };
+
+        document.getElementById('next-month').onclick = () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            showMonthView(currentYear, currentMonth);
+        };
+
+        // Auto-display the current month when the page loads
+        window.onload = () => {
+            generateYearCalendar(currentYear);
+            showMonthView(currentYear, currentMonth);
+        };
+    </script>
+</body>
+</html>
